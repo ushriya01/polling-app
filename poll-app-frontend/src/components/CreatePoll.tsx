@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const CreatePoll: React.FC = () => {
   const [question, setQuestion] = useState('');
-  const [options, setOptions] = useState<string[]>(['']);
+  const [options, setOptions] = useState<string[]>(['', '']); // Initialize with two empty strings
   const [error, setError] = useState('');
 
   const handleAddOption = () => {
@@ -13,6 +13,12 @@ const CreatePoll: React.FC = () => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
+  };
+
+  const handleRemoveOption = (index: number) => {
+    if (options.length > 2) { // Ensure there are at least two options
+      setOptions(prevOptions => prevOptions.filter((_, i) => i !== index));
+    }
   };
 
   const handleCreatePoll = async () => {
@@ -68,6 +74,9 @@ const CreatePoll: React.FC = () => {
               value={option}
               onChange={(e) => handleOptionChange(index, e.target.value)}
             />
+            {index >= 2 && (
+              <button onClick={() => handleRemoveOption(index)}>Remove Option</button>
+            )}
           </div>
         ))}
         <button onClick={handleAddOption}>Add Option</button>

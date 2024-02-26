@@ -10,7 +10,6 @@ const EditPoll: React.FC = () => {
   const { pollId } = useParams<{ pollId: string }>();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState<Option[]>([]);
-  const [newOption, setNewOption] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -42,9 +41,12 @@ const EditPoll: React.FC = () => {
   }, [pollId]);
 
   const handleAddOption = () => {
-    if (newOption.trim() !== '') {
-      setOptions(prevOptions => [...prevOptions, { id: options.length + 1, text: newOption }]);
-      setNewOption('');
+    setOptions(prevOptions => [...prevOptions, { id: prevOptions.length + 1, text: '' }]);
+  };
+
+  const handleRemoveOption = (index: number) => {
+    if (options.length > 2) {
+      setOptions(prevOptions => prevOptions.filter((_, i) => i !== index));
     }
   };
 
@@ -56,29 +58,33 @@ const EditPoll: React.FC = () => {
       if (options.some(option => option.text.trim() === '')) {
         throw new Error('Please enter all options');
       }
-
+  
       const token = localStorage.getItem('token');
-
+  
+      const updatedOptions = options.map(option => ({ text: option.text }));
+  
       const response = await fetch(`http://localhost:8080/api/polls/${pollId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ question, options }),
+        body: JSON.stringify({ question, options: updatedOptions }),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to update poll');
-      }
-
-      // Redirect user to the list of polls with updated data
+        if (response.status === 401) {
+          throw new Error('You do not have access to update this poll');
+        } else {
+          throw new Error('Failed to update poll');
+        }
+      }      
       window.location.href = '/polls';
     } catch (error) {
       setError(error.message);
       console.error(error);
     }
-  };
+  };  
 
   return (
     <div>
@@ -90,28 +96,29 @@ const EditPoll: React.FC = () => {
       </div>
       <div>
         <label>Options:</label>
-        {options.map((option) => (
+        {options.map((option, index) => (
           <div key={option.id}>
             <input
               type="text"
               value={option.text}
               onChange={(e) => {
-                const newOptions = [...options];
-                newOptions.find(o => o.id === option.id)!.text = e.target.value;
-                setOptions(newOptions);
+                const updatedOptions = options.map((opt, idx) =>
+                  idx === index ? { ...opt, text: e.target.value } : opt
+                );
+                setOptions(updatedOptions);
               }}
             />
+            {index >= 2 && (
+              <button onClick={() => handleRemoveOption(index)}>Remove Option</button>
+            )}
           </div>
         ))}
-        <div>
-          <input
-            type="text"
-            value={newOption}
-            onChange={(e) => setNewOption(e.target.value)}
-            placeholder="New Option"
-          />
-          <button onClick={handleAddOption}>Add Option</button>
-        </div>
+        {options.length < 2 && <button onClick={handleAddOption}>Add Option</button>}
+        {options.length >= 2 && (
+          <div>
+            <button onClick={handleAddOption}>Add Option</button>
+          </div>
+        )}
       </div>
       <button onClick={handleUpdatePoll}>Update Poll</button>
     </div>

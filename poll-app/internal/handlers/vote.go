@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"poll-app/internal/models"
-	"poll-app/internal/utils"
 	"strconv"
 	"strings"
 
@@ -14,21 +13,7 @@ import (
 
 // VoteHandler handles the request to vote on a poll
 func VoteHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	claims, err := utils.ParseToken(tokenString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	userID, ok := claims["user_id"].(string)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	userID := r.Context().Value("user_id").(string)
 	var vote models.Vote
 	if err := json.NewDecoder(r.Body).Decode(&vote); err != nil {
 		log.Println("Error:", err)
@@ -56,16 +41,6 @@ func VoteHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 // GetVotesHandler handles the request to retrieve votes for a poll option
 func GetVotesHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	_, err := utils.ParseToken(tokenString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
 	pollID, err := strconv.Atoi(ps.ByName("pollID"))
 	if err != nil {
 		http.Error(w, "Invalid poll ID", http.StatusBadRequest)

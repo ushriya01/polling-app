@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"poll-app/internal/models"
-	"poll-app/internal/utils"
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
@@ -13,16 +12,6 @@ import (
 
 // ListPollsHandler handles the request to list all polls
 func ListPollsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	_, err := utils.ParseToken(tokenString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
 	polls, err := models.ListPolls(r.Context())
 	if err != nil {
 		log.Println("Error:", err)
@@ -36,21 +25,7 @@ func ListPollsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 
 // CreatePollHandler handles the request to create a new poll
 func CreatePollHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	claims, err := utils.ParseToken(tokenString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	userID, ok := claims["user_id"].(string)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	userID := r.Context().Value("user_id").(string)
 	var poll models.Poll
 	if err := json.NewDecoder(r.Body).Decode(&poll); err != nil {
 		log.Println("Error:", err)
@@ -75,16 +50,6 @@ func CreatePollHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 
 // GetPollHandler handles the request to retrieve a poll by ID
 func GetPollHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	_, err := utils.ParseToken(tokenString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
 	pollID, err := strconv.Atoi(ps.ByName("pollID"))
 	if err != nil {
 		http.Error(w, "Invalid poll ID", http.StatusBadRequest)
@@ -102,21 +67,7 @@ func GetPollHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 
 // DeletePollHandler handles the request to delete a poll by ID
 func DeletePollHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	claims, err := utils.ParseToken(tokenString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	userID, ok := claims["user_id"].(string)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	userID := r.Context().Value("user_id").(string)
 	pollID, err := strconv.Atoi(ps.ByName("pollID"))
 	if err != nil {
 		http.Error(w, "Invalid poll ID", http.StatusBadRequest)
@@ -143,22 +94,7 @@ func DeletePollHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 // UpdatePollHandler handles the request to update a poll by ID
 func UpdatePollHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	claims, err := utils.ParseToken(tokenString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	userID, ok := claims["user_id"].(string)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
+	userID := r.Context().Value("user_id").(string)
 	pollID, err := strconv.Atoi(ps.ByName("pollID"))
 	if err != nil {
 		http.Error(w, "Invalid poll ID", http.StatusBadRequest)

@@ -74,11 +74,9 @@ const ListPolls: React.FC = () => {
           throw new Error('Failed to vote');
         }
       }
-  
-      // Update the polls data after voting
-      const updatedPolls = polls.map(poll => {
+      const updatedPolls = polls.map((poll) => {
         if (poll.id === pollId) {
-          const updatedOptions = poll.options.map(option => {
+          const updatedOptions = poll.options.map((option) => {
             if (option.id === optionId) {
               return { ...option, votes: option.votes + 1 };
             }
@@ -96,7 +94,7 @@ const ListPolls: React.FC = () => {
         setError('');
       }, 2000);
     }
-  };  
+  };
 
   const handleEdit = (pollId: number) => {
     window.location.href = `/edit-poll/${pollId}`;
@@ -114,11 +112,14 @@ const ListPolls: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete poll');
-      }
+        if (response.status === 401) {
+          throw new Error('You do not have access to delete this poll');
+        } else {
+          throw new Error('Failed to delete poll');
+        }
+      }      
 
-      // Filter out the deleted poll from the list
-      const updatedPolls = polls.filter(poll => poll.id !== pollId);
+      const updatedPolls = polls.filter((poll) => poll.id !== pollId);
       setPolls(updatedPolls);
     } catch (error) {
       setError(error.message);
@@ -147,8 +148,6 @@ const ListPolls: React.FC = () => {
 
       if (selectedUsers) {
         alert(`Users who selected this option: ${selectedUsers}`);
-      } else {
-        alert('No users have selected this option yet');
       }
     } catch (error) {
       setError(error.message);
@@ -160,23 +159,27 @@ const ListPolls: React.FC = () => {
     <div>
       <h2>Polling Dashboard</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {polls.length === 0 ? (
-        <p>No polls available.</p>
-      ) : (
-        <ul style={{ textAlign: 'left' }}>
-          {polls.map((poll) => (
+      <ul style={{ textAlign: 'left' }}>
+        {polls === null || polls.length === 0 ? (
+          <li>No polls available.</li>
+        ) : (
+          polls.map((poll) => (
             <li key={poll.id}>
               <h3>{poll.question}</h3>
               <ul>
                 {poll.options.map((option) => (
                   <li key={option.id}>
-                    {option.text} - Votes: 
-                    <span 
-                      style={{ cursor: 'pointer', textDecoration: 'underline' }} 
-                      onClick={() => handleShowSelectedUsers(poll.id, option.id)}
-                    >
-                      {option.votes}
-                    </span>
+                    {option.text} - Votes:{' '}
+                    {option.votes > 0 ? (
+                      <span
+                        style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                        onClick={() => handleShowSelectedUsers(poll.id, option.id)}
+                      >
+                        {option.votes}
+                      </span>
+                    ) : (
+                      <span>{option.votes}</span>
+                    )}
                     <button onClick={() => handleVote(poll.id, option.id)}>Vote</button>
                   </li>
                 ))}
@@ -184,11 +187,13 @@ const ListPolls: React.FC = () => {
               <button onClick={() => handleEdit(poll.id)}>Edit</button>
               <button onClick={() => handleDelete(poll.id)}>Delete</button>
             </li>
-          ))}
-        </ul>
-      )}
+          ))
+        )}
+      </ul>
       <div style={{ textAlign: 'left', marginTop: '20px' }}>
-        <Link to="/create-poll"><button>Create New Poll</button></Link>
+        <Link to="/create-poll">
+          <button>Create New Poll</button>
+        </Link>
       </div>
     </div>
   );
