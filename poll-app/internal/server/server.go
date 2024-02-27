@@ -40,7 +40,7 @@ func (s *Server) SetupRoutes() http.Handler {
 	router.GET("/api/polls/:pollID/options/:optionID/votes", adaptHandler(handlers.GetVotesHandler, s.ctx, middleware.ParseTokenMiddleware))
 	router.POST("/api/signup", adaptHandler(handlers.SignupHandler, s.ctx))
 	router.POST("/api/signin", adaptHandler(handlers.SigninHandler, s.ctx))
-
+	router.POST("/api/clear-data", adaptHandler(handlers.ClearDataHandler, s.ctx, middleware.ParseTokenMiddleware))
 	return router
 }
 
