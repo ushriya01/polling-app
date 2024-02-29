@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"poll-app/internal/db"
 	"poll-app/internal/server"
 	"time"
@@ -12,7 +14,11 @@ import (
 )
 
 func main() {
-	dbDSN := "postgres://postgres:password@localhost:5432/poll_db?sslmode=disable"
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "localhost"
+	}
+	dbDSN := fmt.Sprintf("postgres://postgres:password@%s:5432/poll_db?sslmode=disable", dbHost)
 	client, err := db.InitializeDB(context.Background(), dbDSN)
 	if err != nil {
 		log.Fatalf("Error initializing database: %v", err)
